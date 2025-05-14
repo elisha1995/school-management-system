@@ -2,7 +2,7 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { Class, Subject, Teacher } from "@/generated/prisma";
+import { Class, Prisma, Subject, Teacher } from "@/generated/prisma";
 import { role,  } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import Image from "next/image";
@@ -89,15 +89,37 @@ const renderRow = (item: TeacherList) => (
 );
 
 const TeacherListPage = async ({ searchParams }: { searchParams: { [key: string]: string | undefined }; }) => {
-
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;
 
-  console.log("searchParams", searchParams);
+  // URL PARAMS CONDITION
+  const query: Prisma.TeacherWhereInput = {};
+
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "classId":
+            query.lessons = {
+              some: {
+                classId: parseInt(value),
+              },
+            };
+            break;
+          case "search":
+            query.name = { contains: value, mode: "insensitive" };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
   
   const [teachersData, count] = await prisma.$transaction([
     prisma.teacher.findMany({
+      where: query,
       include: {
         subjects: true,
         classes: true,
@@ -105,13 +127,12 @@ const TeacherListPage = async ({ searchParams }: { searchParams: { [key: string]
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
     }),
-    prisma.teacher.count(),
+    prisma.teacher.count({ where: query }),
   ]);
 
   console.log("count", count);
-  
+
   //console.log(teachersData);
-  
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -139,7 +160,7 @@ const TeacherListPage = async ({ searchParams }: { searchParams: { [key: string]
       {/* LIST */}
       <Table columns={columns} renderRow={renderRow} data={teachersData} />
       {/* PAGINATION */}
-      <Pagination page={p}  count={count} />
+      <Pagination page={p} count={count} />
     </div>
   );
 };
