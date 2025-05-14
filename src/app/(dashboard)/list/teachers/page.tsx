@@ -7,6 +7,7 @@ import { role,  } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
+import { ITEM_PER_PAGE } from "@/lib/settings";
 
 type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
 
@@ -87,16 +88,29 @@ const renderRow = (item: TeacherList) => (
   </tr>
 );
 
-const TeacherListPage = async () => {
+const TeacherListPage = async ({ searchParams }: { searchParams: { [key: string]: string | undefined }; }) => {
 
-  const teachersData = await prisma.teacher.findMany({
-    include: {
-      subjects: true,
-      classes: true,
-    },
-  });
+  const { page, ...queryParams } = searchParams;
 
-  console.log(teachersData);
+  const p = page ? parseInt(page) : 1;
+
+  console.log("searchParams", searchParams);
+  
+  const [teachersData, count] = await prisma.$transaction([
+    prisma.teacher.findMany({
+      include: {
+        subjects: true,
+        classes: true,
+      },
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.teacher.count(),
+  ]);
+
+  console.log("count", count);
+  
+  //console.log(teachersData);
   
 
   return (
@@ -125,7 +139,7 @@ const TeacherListPage = async () => {
       {/* LIST */}
       <Table columns={columns} renderRow={renderRow} data={teachersData} />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={p}  count={count} />
     </div>
   );
 };
