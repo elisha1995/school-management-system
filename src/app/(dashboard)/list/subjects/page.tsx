@@ -3,7 +3,7 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma, Subject, Teacher } from "@/generated/prisma";
-import { role, subjectsData } from "@/lib/data";
+import { role } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
@@ -65,12 +65,8 @@ const SubjectListPage = async ({
     if (queryParams) {
       for (const [key, value] of Object.entries(queryParams)) {
         if (value !== undefined) {
-          switch (key) {
-            case "search":
-              query.name = { contains: value, mode: "insensitive" };
-              break;
-            default:
-              break;
+          if (key === "search") {
+            query.name = { contains: value, mode: "insensitive" };
           }
         }
       }
