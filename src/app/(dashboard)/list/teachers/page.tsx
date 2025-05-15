@@ -81,7 +81,7 @@ const renderRow = (item: TeacherList) => (
           // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaPurple">
           //   <Image src="/delete.png" alt="" width={16} height={16} />
           // </button>
-          <FormModal table="teacher" type="delete" id={item.id} />
+          <FormModal table="teacher" type="delete" id={parseInt(item.id)} />
         )}
       </div>
     </td>
@@ -129,10 +129,6 @@ const TeacherListPage = async ({ searchParams }: { searchParams: { [key: string]
     }),
     prisma.teacher.count({ where: query }),
   ]);
-
-  console.log("count", count);
-
-  //console.log(teachersData);
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
